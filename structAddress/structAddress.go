@@ -13,6 +13,7 @@ type theStructLiteral struct {
 // pointers to structs with slices (pointers to slices?)
 // structs with slices (pointers to slices?)
 func main() {
+	// temp change 1
 	// What happens to a struct when it's slice literal is re-allocated?
 	// Is it ever different than if a slice pointer is re-allocated?
 
