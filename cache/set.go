@@ -1,14 +1,29 @@
 package cache
 
-type Set[E comparable] map[E]struct{}
+import "sync"
 
-func (set Set[E]) Add(elements ...E) {
-	for _, element := range elements {
-		set[element] = struct{}{}
+type Set[E comparable] struct {
+	data map[E]struct{}
+	lock *sync.Mutex
+}
+
+func New[E comparable]() *Set[E] {
+	return &Set[E]{
+		data: map[E]struct{}{},
+		lock: &sync.Mutex{},
 	}
 }
 
-func (set Set[E]) Union(anotherSet Set[E]) Set[E] {
+func (set *Set[E]) Add(elements ...E) {
+	set.lock.Lock()
+	defer set.lock.Unlock()
+
+	for _, element := range elements {
+		set.data[element] = struct{}{}
+	}
+}
+
+func (set Set[E]) Union(anotherSet Set[E]) *Set[E] {
 	unionSet := New[E]()
 	unionSet.Add(set.Members()...)
 	unionSet.Add(anotherSet.Members()...)
@@ -16,13 +31,12 @@ func (set Set[E]) Union(anotherSet Set[E]) Set[E] {
 }
 
 func (set Set[E]) Members() []E {
-	members := make([]E, 0, len(set))
-	for key := range set {
+	set.lock.Lock()
+	defer set.lock.Unlock()
+
+	members := make([]E, 0, len(set.data))
+	for key := range set.data {
 		members = append(members, key)
 	}
 	return members
-}
-
-func New[E comparable]() Set[E] {
-	return Set[E]{}
 }

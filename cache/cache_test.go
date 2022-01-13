@@ -1,7 +1,6 @@
 package cache_test
 
 import (
-	"fmt"
 	"sandbox/cache"
 	"sort"
 
@@ -10,23 +9,37 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func Test_cache_putThingsIn(t *testing.T) {
+func TestCachePutThingsIn(t *testing.T) {
 	set := cache.New[string]()
 	set.Add("b")
 	set.Add("d")
 
 	setTwo := cache.New[string]()
-	set.Add("c")
-	set.Add("e")
+	setTwo.Add("c")
+	setTwo.Add("e")
 
-	println("Union Members: ")
-	unionSet := set.Union(setTwo)
-	unionMembers := unionSet.Members()
-	sort.Slice(unionMembers, func(i, j int) bool {
-		return unionMembers[i] < unionMembers[j]
+	unionSet := set.Union(*setTwo)
+	got := unionSet.Members()
+	sort.Slice(got, func(i, j int) bool {
+		return got[i] < got[j]
 	})
-	if !cmp.Equal(unionMembers, []string{"b", "c", "d", "e"}) {
-		t.Fatalf("didn't get what we wanted")
+	want := []string{"b", "c", "d", "e"}
+	if !cmp.Equal(got, want) {
+		t.Fatalf(cmp.Diff(want, got))
 	}
-	fmt.Println(unionMembers)
+}
+
+func TestConcurrency(t *testing.T) {
+	s := cache.New[int]()
+
+	go func() {
+		for i := 0; i < 1000; i++ {
+			s.Members()
+		}
+	}()
+
+	for i := 0; i < 1000; i++ {
+		s.Add(i)
+	}
+
 }
